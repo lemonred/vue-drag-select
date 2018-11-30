@@ -1,6 +1,6 @@
 <template>
   <div class="vue-drag-select" @mousedown="onMouseDown">
-    <slot :selectedItems="selectedItems" />
+    <slot :seletedItem="lastSelectedData" :hoveredItem="hoveredItem"/>
     <div v-if="mouseDown" class="vue-drag-select-box"
       :style="selectionBoxStyling"></div>
   </div>
@@ -13,14 +13,32 @@
       selectorClass: {
         type: String,
         required: true
-      }
+      },
+      clearSection: { /*清除选区标志，如果为true则清除当前的选择*/
+        type: Boolean,
+        required: false
+      },
+      selectGroupType: { 
+        /*
+        2:是多个组，返回选区类型[[item, item],[item, item]],[item, item]]]
+        1: 返回数据为一个组，返回选区[item, item, item],每次拖拽的选区可以叠加
+        0: 返回数据为一个组，并且每次选择会把上次选择的清空
+        */
+        type: Number,
+        required: false,
+        default: 0,
+      },
     },
     data () {
       return {
         mouseDown: false,
         startPoint: null,
         endPoint: null,
-        selectedItems: []
+        // hoveredItem: [], /*正在选择中的元素，其实就是hoveredItem*/
+        
+        hoveredItem: [],/*正在选择中的元素，其实就是hoveredItem*/
+        lastSelectedData: [], /*上次mouseup的被选中的数据, hover选中的数据又不一样*/
+        bigSelected: [], /*上次mouseup的被选中的数据平铺结构*/
       }
     },
     computed: {
@@ -61,8 +79,19 @@
       }
     },
     watch: {
-      selectedItems (val) {
+      hoveredItem (val) {
         this.$emit('change', val)
+      },
+      lastSelectedData (val) {
+        this.$emit('change', val)
+      },
+      clearSection (val) {
+        if(val) {
+          this.hoveredItem = [];
+          this.bigSelected = [];
+          this.lastSelectedData = [];
+          this.$emit('backClear')
+        }
       }
     },
     methods: {
@@ -108,23 +137,64 @@
             : this.$el.children
 
           if (children) {
-            this.selectedItems = Array.from(children).filter((item) => {
+            this.hoveredItem = Array.from(children).filter((item) => {
               return this.isItemSelected(item.$el || item)
-            })
+            });
+            // this.hoveredItem = pushArrs;
+
           }
         }
       },
       onMouseUp (event) {
         // Clean up event listeners
+        this.dealSelectData()
         window.removeEventListener('mousemove', this.onMouseMove)
         window.removeEventListener('mouseup', this.onMouseUp)
-
+        // this.bigSelected.push(this.hoveredItem);
         // Reset state
         this.mouseDown = false
         this.startPoint = null
         this.endPoint = null
       },
+      /*
+      当前选中的数据处理与返回
+      */
+      dealSelectData () {
+        let pushItems = this.hoveredItem;
+        if(this.selectGroupType == 0) { //一次性的
+          this.bigSelected = pushItems;
+        }else if(this.selectGroupType == 1) { /*可累加，需要考虑反选，选中的数据是一个数组，1和2比较是否已经选中要跟上次mouseup的数据比*/
+            console.log(this.bigSelected);
+            pushItems.forEach((item)=>{
+              console.log('alreay have ',this.bigSelected.indexOf(item));
+              if(this.bigSelected.indexOf(item)>-1) {
+                this.bigSelected.splice(this.bigSelected.indexOf(item), 1);
+              }else{
+                this.bigSelected.push(item);  
+              }
+            })
+            
+        }else if(this.selectGroupType == 2) { /*可累加，需要考虑反选，选中的数据是多个数组，按照选择顺利用数组存起来*/
+            this.bigSelected.forEach((item)=>{
+
+              pushItems.forEach((bItem, index)=>{
+                if(item.indexOf(bItem)>-1){
+                  item.splice(item.indexOf(bItem), 1);
+                  pushItems.splice(index, 1);
+                }
+              })
+              // if(this.bigSelected.indexOf(item)>-1){
+              //   this.bigSelected.splice(this.bigSelected.indexOf(item), 1);
+              // }
+            })
+            this.bigSelected.push(pushItems);
+        }
+        // this.hoveredItem = [];
+        this.lastSelectedData = this.bigSelected;
+      },
       isItemSelected (el) {
+        // console.log('el.classList:',el.classList)
+        // console.log('contains:',el.classList.contains)
         if (el.classList.contains(this.selectorClass)) {
           const boxA = this.selectionBox
           const boxB = {
@@ -148,16 +218,16 @@
     mounted () {
       this.$children.forEach((child) => {
         child.$on('click', (event) => {
-          const included = this.selectedItems.find((item) => {
+          const included = this.hoveredItem.find((item) => {
             return child.$el === item.$el
           })
 
           if (included) {
-            this.selectedItems = this.selectedItems.filter((item) => {
+            this.hoveredItem = this.hoveredItem.filter((item) => {
               return child.$el !== item.$el
             })
           } else {
-            this.selectedItems.push(child)
+            this.hoveredItem.push(child)
           }
         })
       })
