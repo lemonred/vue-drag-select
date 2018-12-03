@@ -1,7 +1,7 @@
 <template>
   <div class="app">
     <h1>Vue Drag Select Example</h1>
-    
+    <button @click="changeClear()">清除选区</button>
     <no-ssr>
       <div>
       <!-- <drag-select-container selectorClass="item" :clearSection="clearSection" @backClear="backClear">
@@ -32,7 +32,7 @@
         </template>
       </drag-select-container> -->
 2
-      <drag-select-container selectorClass="item" :hasClearSection=true  :selectGroupType="2">
+      <drag-select-container selectorClass="item" :clearSection="clearSection" @backClear="backClear"  :selectGroupType="2">
         <template slot-scope="{ seletedItem, hoveredItem }">
           <div
             v-for="item in 50"
@@ -160,6 +160,6 @@
   }
   .item.hovered {
     background-color: yellow;
-    color: #000;
+    color: #fff;
   }
 </style>
