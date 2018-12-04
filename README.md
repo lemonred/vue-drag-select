@@ -40,7 +40,7 @@ export default {
   </drag-select-container>
 </template>
 ```
-
+## update add multiselect  and select revert(20181204)
 * Then write your own logic to make items look selected. For instance
   by applying a class.
 

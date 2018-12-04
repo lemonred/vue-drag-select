@@ -1,6 +1,7 @@
 <template>
   <div class="vue-drag-select" @mousedown="onMouseDown">
-    <slot :seletedItem="lastSelectedData" :hoveredItem="hoveredItem"/>
+    <!-- <slot :seletedItem="lastSelectedData" :hoveredItem="hoveredItem"/> -->
+    <slot :itemsStatus="Items"/>
     <div v-if="mouseDown" class="vue-drag-select-box"
       :style="selectionBoxStyling"></div>
     <button @click="changeClear()" v-if="hasClearSection">清除选区</button>
@@ -36,11 +37,9 @@
         mouseDown: false,
         startPoint: null,
         endPoint: null,
-        // hoveredItem: [], /*正在选择中的元素，其实就是hoveredItem*/
-        
         hoveredItem: [],/*正在选择中的元素，其实就是hoveredItem*/
-        lastSelectedData: [], /*上次mouseup的被选中的数据, hover选中的数据又不一样*/
-        bigSelected: [], /*上次mouseup的被选中的数据平铺结构*/
+        Items: [],
+        groupIndex: 0,
       }
     },
     computed: {
@@ -84,16 +83,14 @@
       hoveredItem (val) {
         this.$emit('change', val)
       },
-      lastSelectedData (val) {
-        this.$emit('change', val)
-      }
+
     },
     methods: {
       /*清除选区*/
       changeClear() {
         this.hoveredItem = [];
-        this.bigSelected = [];
-        this.lastSelectedData = [];
+        this.Items = [];
+        this.groupIndex = 0;
         this.$emit('backClear')
       },
       getScroll () {
@@ -139,14 +136,31 @@
 
 
           if (children) {
-            this.hoveredItem = Array.from(children).filter((item, index) => {
+            this.hoveredItem = [];
+            Array.from(children).filter((item, index) => {
               item.dataset.dragIndex =index;
+              if(!this.Items[index]) {
+                this.$set(this.Items, index, {});
+              }
+              this.$set(this.Items[index], 'hovered', false)
+              let itemSeleted = this.isItemSelected(item.$el || item), returnIndex;
+              if(itemSeleted) { /*hovered*/
               
-              return this.isItemSelected(item.$el || item)
+                returnIndex = index;
+                console.log('returnIndex',returnIndex)
+                this.$set(this.Items[index], 'hovered',true)
+                this.hoveredItem.push(index);
+              }
+              // this.Items[index]['hovered'] = true;
+              // return returnIndex;
+              
+              // return this.isItemSelected(item.$el || item)
             });
-            console.log(this.hoveredItem)
+            console.log('hoveredItem',this.hoveredItem)
             // this.hoveredItem = pushArrs;
+            // this.Items.forEach(()=>{
 
+            // })
           }
         }
       },
@@ -155,56 +169,43 @@
         this.dealSelectData()
         window.removeEventListener('mousemove', this.onMouseMove)
         window.removeEventListener('mouseup', this.onMouseUp)
-        // this.bigSelected.push(this.hoveredItem);
+
         // Reset state
         this.mouseDown = false
         this.startPoint = null
         this.endPoint = null
       },
-      /*
-      当前选中的数据处理与返回
-      */
-      // dealSelectData () {
-      //   let pushItems = this.hoveredItem;
-      //   if(this.selectGroupType == 0) { //一次性的
-      //     this.bigSelected = pushItems;
-      //   }else if(this.selectGroupType == 1) { /*可累加，需要考虑反选，选中的数据是一个数组，1和2比较是否已经选中要跟上次mouseup的数据比*/
-      //       console.log(this.bigSelected);
-      //       pushItems.forEach((item)=>{
-      //         console.log('alreay have ',this.bigSelected.indexOf(item));
-      //         if(this.bigSelected.indexOf(item)>-1) {
-      //           this.bigSelected.splice(this.bigSelected.indexOf(item), 1);
-      //         }else{
-      //           this.bigSelected.push(item);  
-      //         }
-      //       })
-            
-      //   }else if(this.selectGroupType == 2) { /*可累加，需要考虑反选，选中的数据是多个数组，按照选择顺利用数组存起来*/
-      //       this.bigSelected.forEach((item)=>{
-
-      //         pushItems.forEach((bItem, index)=>{
-      //           if(item.indexOf(bItem)>-1){
-      //             item.splice(item.indexOf(bItem), 1);
-      //             pushItems.splice(index, 1);
-      //           }
-      //         })
-      //         // if(this.bigSelected.indexOf(item)>-1){
-      //         //   this.bigSelected.splice(this.bigSelected.indexOf(item), 1);
-      //         // }
-      //       })
-      //       this.bigSelected.push(pushItems);
-      //   }
-      //   // this.hoveredItem = [];
-      //   this.lastSelectedData = this.bigSelected;
-      // },
       dealSelectData () {
+        this.groupIndex+=1;
         if(this.selectGroupType == 0) {
-          this.bigSelected = pushItems;
+          this.Items.forEach((item, index)=> {
+            item.hovered = false;
+            item.active = false;
+            if(this.hoveredItem.indexOf(index)>-1){
+              item.active = true;
+            }
+          })
+        }else if(this.selectGroupType == 1) {
+          this.Items.forEach((item, index)=> {
+            item.hovered = false;
+            // item.active = false;
+            if(this.hoveredItem.indexOf(index)>-1){
+              item.active = true;
+            }
+          })
+        }else if(this.selectGroupType == 2) {
+          this.Items.forEach((item, index)=> {
+            item.hovered = false;
+            // item.active = false;
+            if(this.hoveredItem.indexOf(index)>-1){
+              item.groupIndex = this.groupIndex;
+              item.active = !item.active;
+            }
+          })
         }
       },
       isItemSelected (el) {
-        // console.log('el.classList:',el.classList)
-        // console.log('contains:',el.classList.contains)
+
         if (el.classList.contains(this.selectorClass)) {
           const boxA = this.selectionBox
           const boxB = {
@@ -213,7 +214,7 @@
             width: el.clientWidth,
             height: el.clientHeight
           }
-
+          
           return !!(
             boxA.left <= boxB.left + boxB.width &&
             boxA.left + boxA.width >= boxB.left &&

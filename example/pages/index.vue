@@ -4,45 +4,17 @@
     
     <no-ssr>
       <div>
-      <!-- <drag-select-container selectorClass="item" :clearSection="clearSection" @backClear="backClear">
-        <template slot-scope="{ bigSelected }">
-          <div
-            v-for="item in 50"
-            :key="item"
-            :class="getClasses(item, bigSelected, 0)"
-            :data-item="item"
-          >
-            sItem
-          </div>
-          {{bigSelected}}
-        </template>
-      </drag-select-container> -->
-1
-      <!-- <drag-select-container selectorClass="item" :clearSection="clearSection" @backClear="backClear" :selectGroupType="1">
-        <template slot-scope="{ seletedItem }">
-          <div
-            v-for="item in 50"
-            :key="item"
-            :class="getClasses(item, seletedItem, 1)"
-            :data-item="item"
-          >
-            sItem{{item}}
-          </div>
-          {{seletedItem}}
-        </template>
-      </drag-select-container> -->
-2
       <drag-select-container selectorClass="item" :hasClearSection=true  :selectGroupType="2">
-        <template slot-scope="{ seletedItem, hoveredItem }">
+        <template slot-scope="{ itemsStatus }">
           <div
             v-for="item in 50"
             :key="item"
-            :class="getClasses(item, seletedItem, 2, hoveredItem)"
+            :class="getClasses(item, itemsStatus, 2)"
             :data-item="item"
           >
             sItem 
           </div>
-          {{seletedItem}}
+          {{itemsStatus}}
         </template>
       </drag-select-container>
       </div>
@@ -52,10 +24,10 @@
 </template>
 
 <script>
-  // import DragSelect from './../../dist/vue-drag-select.js'
+
   import DragSelect from '../../src/DragSelect.vue'
   import NoSSR from 'vue-no-ssr'
-  console.log(DragSelect)
+
   export default {
     name: 'home',
     data() {
@@ -77,37 +49,19 @@
       },
       /*
       set active class
-
       */
-      getClasses (item, bigSelected, type, hoveredItems) {
+      getClasses (item, itemStatus, type) {
         let returnItem;
-        const isActive = !!(bigSelected.find((selectedItem) => {
-          
-          if(type==0 || !type || type==1) { /*简单数组*/
-              return parseInt(selectedItem.dataset.item, 10) === item;
-          }else if(type==2) {
-            console.log(selectedItem)
-          for(let i = 0; i < selectedItem.length; i++) {
-            console.log(selectedItem[i].dataset.item,item)
-            if(parseInt(selectedItem[i].dataset.item, 10) === item){
-              returnItem = selectedItem[i];
-              break;
-            }
-          }
-          return returnItem;
-          }
-
-        }))
-
-        const isHover = !!(hoveredItems.find((hItem) => {
-          return parseInt(hItem.dataset.item, 10) === item;
-        }))
-        
-
+        console.log(item.$el);
+        let hovered = false, active = false;
+        if(itemStatus && itemStatus[item-1]){
+          hovered = itemStatus[item-1].hovered;
+          active =  itemStatus[item-1].active;
+        }
         return {
           item: true,
-          active: isActive,
-          hovered: isHover
+          active: active,
+          hovered: hovered
         }
       }
     }
