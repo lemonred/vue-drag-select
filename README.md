@@ -41,6 +41,9 @@ export default {
 </template>
 ```
 ## update add multiselect  and select revert(20181204)
+* props selectGroupType=1 multiselect and select revert
+* props selectGroupType=2 multiselect and select revert and group tag
+
 * Then write your own logic to make items look selected. For instance
   by applying a class.
 
