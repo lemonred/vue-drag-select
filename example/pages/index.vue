@@ -4,19 +4,24 @@
     
     <no-ssr>
       <div>
-      <drag-select-container selectorClass="item" :hasClearSection=true  :selectGroupType="2">
-        <template slot-scope="{ itemsStatus }">
-          <div
-            v-for="item in 50"
-            :key="item"
-            :class="getClasses(item, itemsStatus, 2)"
-            :data-item="item"
-          >
-            sItem 
-          </div>
-          {{itemsStatus}}
-        </template>
-      </drag-select-container>
+          <drag-select-container 
+              selector-class="item" 
+              :has-clear-section=true 
+              clear-section-text = '重新设置'
+              :select-group-type="2">
+              <template slot-scope="{ itemsStatus,groupArr }">
+                <div 
+                  v-for="(item, index) in boxItems" 
+                  :key="index" 
+                  :class="getClasses(item, itemsStatus, 2, groupArr)"
+                  :data-index="item.index" 
+                  :data-col="item.col" 
+                  :data-row="item.row" 
+                  :style="{width: 600/colSpan-2, height: 600/rowSpan-2}">
+                  <span v-if="itemsStatus[item.index]">{{ itemsStatus[item.index].groupIndex }}</span>
+                </div>
+              </template>
+            </drag-select-container>
       </div>
      
     </no-ssr>
@@ -32,38 +37,49 @@
     name: 'home',
     data() {
       return {
-        clearSection: false
+        clearSection: false,
+        rowSpan: 10, /* 行 */
+        colSpan: 5, /* 列 */
       }
     },
     components: {
       'drag-select-container': DragSelect,
       'no-ssr': NoSSR
     },
-
+    computed: {
+      boxItems() { /*所有选区中的元素*/
+        let arr = [], alen = this.rowSpan *  this.colSpan;
+        for(let i = 0 ; i < alen; i++){
+          arr.push({
+            col: parseInt(i/this.colSpan), /*第几行*/
+            row: i % this.colSpan, /*第几列*/
+            index: i
+          })
+        }
+        return arr
+      }
+    },
     methods: {
-      backClear() {
-        this.clearSection = false;  
-      },
-      changeClear() {
-        this.clearSection = true;
-      },
+
+
       /*
       set active class
       */
-      getClasses (item, itemStatus, type) {
-        let returnItem;
-        console.log(item.$el);
-        let hovered = false, active = false;
-        if(itemStatus && itemStatus[item-1]){
-          hovered = itemStatus[item-1].hovered;
-          active =  itemStatus[item-1].active;
-        }
-        return {
-          item: true,
-          active: active,
-          hovered: hovered
-        }
+    getClasses (item, itemStatus, type, groupArr) {
+      this.items = itemStatus;
+      this.groupArr = groupArr;
+      let returnItem;
+      let hovered = false, active = false;
+      if(itemStatus && itemStatus[item.index]){
+        hovered = itemStatus[item.index].hovered;
+        active =  itemStatus[item.index].active;
       }
+      return {
+        item: true,
+        active: active,
+        hovered: hovered
+      }
+    },
     }
   }
 </script>

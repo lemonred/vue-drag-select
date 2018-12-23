@@ -5,6 +5,13 @@
 
 # Vue Drag to Select Component
 A Vue component for drag selecting elements. Inspired by [react-drag-select](https://github.com/pablofierro/react-drag-select).
+support select and select inverse and group select 
+
+<p align="center">
+group select
+  <img src="https://github.com/lemonred/vue-drag-select/master/images/select-muliti.png"
+    alt="Screenshot">
+</p>
 
 ## Demo
 * Visit the demo [here](http://vue-drag-select-example.now.sh).
@@ -43,9 +50,30 @@ export default {
 ## update add multiselect  and select revert(20181204)
 * props selectGroupType=1 multiselect and select revert
 * props selectGroupType=2 multiselect and select revert and group tag
+* Then write your own logic to make items look selected. For instance by applying a class.
 
-* Then write your own logic to make items look selected. For instance
-  by applying a class.
+props hasClearSection can clear what you select
+
+```
+          <drag-select-container 
+              selector-class="item" 
+              :has-clear-section=true 
+              clear-section-text = '重新设置'
+              :select-group-type="2">
+              <template slot-scope="{ itemsStatus,groupArr }">
+                <div 
+                  v-for="(item, index) in boxItems" 
+                  :key="index" 
+                  :class="getClasses(item, itemsStatus, 2, groupArr)"
+                  :data-index="item.index" 
+                  :data-col="item.col" 
+                  :data-row="item.row" 
+                  :style="{width: 600/colSpan-2, height: 600/rowSpan-2}">
+                  <span v-if="itemsStatus[item.index]">{{ itemsStatus[item.index].groupIndex }}</span>
+                </div>
+              </template>
+            </drag-select-container>
+```
 
 ## License
 MIT
