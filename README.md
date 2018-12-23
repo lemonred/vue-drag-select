@@ -9,7 +9,7 @@ support select and select inverse and group select
 
 <p align="center">
 group select
-  <img src="https://github.com/lemonred/vue-drag-select/master/images/select-muliti.png"
+  <img src="https://raw.githubusercontent.com/lemonred/vue-drag-select/master/images/select-muliti.png"
     alt="Screenshot">
 </p>
 
